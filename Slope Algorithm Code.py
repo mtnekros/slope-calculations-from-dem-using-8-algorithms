@@ -44,23 +44,21 @@ def set_slope_dataset_with( nRows, nCols, cell_size, dem_dataset, slope_dataset,
             # extracting the moving window values
             window_z = get_flattened_moving_window(dem_dataset, i+1, j+1)
             slope_dataset[i, j] = math.degrees( getSlope(window_z, cell_size) ) # changed degrees alter if needed later
+    
 
-
-def saveDatasetToFile( dataset,filename ):
-    np.savetxt(f"{filename}.csv", dataset, delimiter=",")
 
 def main():
     # opening the dem file with rasterio
     # input for path + filename in one variable # r'C:/Users/Diwas/Desktop/Studies/8th Semester/Final Year Project/Data/Clipped Dem/steeptry1'
     input_file = input("Enter the filepath + name: ")
     with rasterio.open( input_file ) as dem:
-        data_set = dem.read(1)
+        dem_data_set = dem.read(1)
     cell_size = dem.meta["transform"][0] # the first index of transform is cell_size x and 4th index is cell_size y
     print("File opened!")
 
     # initializing the slope matrix with np array of zeroes
     nRows, nCols = dem.shape
-    slope_data_set = [ np.zeros((nRows-2, nCols-2)) for i in range(4) ]
+    slope_data_sets = [ np.zeros((nRows-2, nCols-2)) for i in range(4) ]
 
     #  names and the methods of algorithms ordered in the same way for setting slope_data_set and saving files later
     algorithmNames = [ "SimpleD", "AvgNeighbourhood", "MaximumMax", "2FD" ]
@@ -68,7 +66,7 @@ def main():
     
     # calculating slope in the predefined order
     for i, get_slope in enumerate( get_slope_methods ):
-        set_slope_dataset_with( nRows, nCols, cell_size, data_set, slope_data_set[i], get_slope )
+        set_slope_dataset_with( nRows, nCols, cell_size, dem_data_set, slope_data_sets[i], get_slope )
         print( "slope calculation done for", algorithmNames[i] )
 
     # extracting metadata as kwargs and updating it
@@ -91,14 +89,16 @@ def main():
     )
     
     # writing slope datasets to csv files
-    for i, name in enumerate( algorithmNames ):
-        saveDatasetToFile( slope_data_set[i],name ) # we can use index becoz slope data set and algorithm names index matches
+    output_filename_prefix = input("Enter the output filename prefix: ")
+    # arranging the np array for spss csv format
+    for slope_data_set,name in zip( slope_data_sets,algorithmNames ): # we can do this becoz slope data set and algorithm names index matches
+        reshaped_array = slope_data_set.flatten()
+        np.savetxt(f"Outputs/{output_filename_prefix}_{name}_txt.csv", reshaped_array, delimiter=",") 
 
     # writing to all files with corresponding algorithm name in order
-    output_filename_suffix = input("Enter the output filename suffix: ")
     for i, name in enumerate( algorithmNames ):
-        with rasterio.open(f'DTM Data/steep/try1/{output_filename_suffix}_{name}.geotiff', 'w', **kwargs) as out_file:
-            out_file.write(slope_data_set[i].astype(rasterio.float32), 1)
+        with rasterio.open(f'Outputs/{output_filename_prefix}_{name}.geotiff', 'w', **kwargs) as out_file:
+            out_file.write(slope_data_sets[i].astype(rasterio.float32), 1)
         print(name, "File saved!")
 
 
