@@ -44,7 +44,6 @@ def set_slope_dataset_with( nRows, nCols, cell_size, dem_dataset, slope_dataset,
             # extracting the moving window values
             window_z = get_flattened_moving_window(dem_dataset, i+1, j+1)
             slope_dataset[i, j] = math.degrees( getSlope(window_z, cell_size) ) # changed degrees alter if needed later
-    
 
 
 def main():
@@ -90,10 +89,13 @@ def main():
     
     # writing slope datasets to csv files
     output_filename_prefix = input("Enter the output filename prefix: ")
-    # arranging the np array for spss csv format
-    for slope_data_set,name in zip( slope_data_sets,algorithmNames ): # we can do this becoz slope data set and algorithm names index matches
-        reshaped_array = slope_data_set.flatten()
-        np.savetxt(f"Outputs/{output_filename_prefix}_{name}_txt.csv", reshaped_array, delimiter=",") 
+    # arranging the np array for spss csv format and writing
+    flattened_slope_datasets = [ slope_array.flatten() for slope_array in slope_data_sets ] # note this still maintins the index of slope_datasets and the algo_names
+    
+    with open( f"Outputs/{output_filename_prefix}_csv_formatted.csv","w" ) as out_csv_file:
+        for data,algo_name in zip(flattened_slope_datasets, algorithmNames):
+            for slope in data:
+                out_csv_file.write( f"{slope},{algo_name}\n" )
 
     # writing to all files with corresponding algorithm name in order
     for i, name in enumerate( algorithmNames ):
