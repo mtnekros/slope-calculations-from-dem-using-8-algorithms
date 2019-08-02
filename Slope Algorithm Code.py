@@ -46,6 +46,9 @@ def set_slope_dataset_with( nRows, nCols, cell_size, dem_dataset, slope_dataset,
             slope_dataset[i, j] = math.degrees( getSlope(window_z, cell_size) ) # changed degrees alter if needed later
 
 
+def saveDatasetToFile( dataset,filename ):
+    np.savetxt(f"{filename}.csv", dataset, delimiter=",")
+
 def main():
     # opening the dem file with rasterio
     # input for path + filename in one variable # r'C:/Users/Diwas/Desktop/Studies/8th Semester/Final Year Project/Data/Clipped Dem/steeptry1'
@@ -86,6 +89,10 @@ def main():
         width=nCols-2,
         driver='GTiff'
     )
+    
+    # writing slope datasets to csv files
+    for i, name in enumerate( algorithmNames ):
+        saveDatasetToFile( slope_data_set[i],name ) # we can use index becoz slope data set and algorithm names index matches
 
     # writing to all files with corresponding algorithm name in order
     output_filename_suffix = input("Enter the output filename suffix: ")
