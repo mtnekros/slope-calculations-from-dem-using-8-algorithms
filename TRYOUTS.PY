@@ -51,7 +51,7 @@ def get_slope_ConstrainedQuadSurface( z,cellsize ):
     matZ = np.array([z]).T
     matA_transpose = matA.T
     # matX is the matrice of coefficients
-    # caculate X = ( ( inverse_of( A_transpose*A ) ) * A_transpose ) * Z in two stepsd
+    # caculate X = ( ( inverse_of( A_transpose*A ) ) * A_transpose ) * Z in two steps
     temp = np.linalg.inv( np.dot( matA_transpose,matA ) )
     matX = np.dot( np.dot( temp,matA_transpose ),matZ )
     slope_x = matX[3,0]

@@ -4,6 +4,9 @@ import rasterio
 import matplotlib.pyplot as plt
 
 
+SQRT_OF_2 = math.sqrt(2)
+
+
 def get_slope_2FD(z, cell_size):
     slope_x = (z[5]-z[3])/float(2*cell_size)
     slope_y = (z[7]-z[1])/float(2*cell_size)
@@ -16,7 +19,7 @@ def get_slope_MaximumMax(z, cell_size):
     slopes = [(abs(z[4] - z[i])) / float(cell_size) for i in indices]
     # calculating the slope sin NE, NW, SE, SW directions
     indices = [0, 2, 6, 8]
-    slopes += [abs(z[4] - z[i]) / float(cell_size * math.sqrt(2)) for i in indices]
+    slopes += [abs(z[4] - z[i]) / float( cell_size*SQRT_OF_2 ) for i in indices]
     return math.atan(max(slopes))
 
 
@@ -30,6 +33,53 @@ def get_slope_AvgNeighbourhood(z, cell_size):
     slope_x = (z[2] - z[0] + 2 * (z[5] - z[3]) + z[8] - z[6]) / float(8*cell_size)
     slope_y = (z[6] - z[0] + 2 * (z[7] - z[1]) + z[8] - z[2]) / float(8*cell_size)
     return math.atan(math.sqrt(slope_x**2 + slope_y**2))
+
+
+def get_slope_3FDWRD( z,cell_size ):
+    slope_x = (z[2] - z[0] + SQRT_OF_2 * (z[5] - z[3]) + z[8] - z[6]) / float( ( 4 + 2*SQRT_OF_2 )*cell_size )
+    slope_y = (z[6] - z[0] + SQRT_OF_2 * (z[7] - z[1]) + z[8] - z[2]) / float( ( 4 + 2*SQRT_OF_2 )*cell_size )
+    return math.atan(math.sqrt(slope_x**2 + slope_y**2))
+
+
+def get_slope_3FD( z,cell_size ):
+    slope_x = (z[2] - z[0] + z[5] - z[3] + z[8] - z[6]) / float( 6*cell_size )
+    slope_y = (z[6] - z[0] + z[7] - z[1] + z[8] - z[2]) / float( 6*cell_size )
+    return math.atan(math.sqrt(slope_x**2 + slope_y**2))
+
+
+def get_slope_FFD( z,cell_size ):
+    slope_x = ( z[2] - z[0] + z[8] - z[6] ) / float( 4*cell_size )
+    slope_y = ( z[6] - z[0] + z[8] - z[3] ) / float( 4*cell_size )
+    return math.atan(math.sqrt(slope_x**2 + slope_y**2))
+
+
+def get_slope_ConstrainedQuadSurface( z,cellsize ):
+    g = cellsize # for simplicity in repitition
+    # define the A matrix
+    matA = np.array([
+        ( g**2,  g**2, -g**2,   -g,    g,    1 ), #1
+        (    0,  g**2,     0,    0,    g,    1 ), #2
+        ( g**2,  g**2,  g**2,    g,    g,    1 ), #3 
+        ( g**2,     0,     0,   -g,    0,    1 ), #4
+        (    0,     0,     0,    0,    0,    1 ), #5
+        ( g**2,     0,     0,    g,    0,    1 ), #6
+        ( g**2,  g**2,  g**2,   -g,   -g,    1 ), #7
+        (    0,  g**2,     0,    0,   -g,    1 ), #8
+        ( g**2,  g**2,  g**2,    g,   -g,    1 ), #9
+    ])
+    # define matZ as transpose of the normalZ
+    matZ = np.array([z]).T
+    # define matA's transpose
+    matA_transpose = matA.T
+    # matX is the matrice of coefficients
+    # caculate X = ( ( inverse_of( A_transpose*A ) ) * A_transpose ) * Z in two steps
+    temp = np.linalg.inv( np.matmul( matA_transpose,matA ) )
+    matX = np.matmul( np.matmul( temp,matA_transpose ),matZ )
+    # slopeX = X at [0,3] i.e. d
+    # slopeY = X at [0,4] i.e. e
+    slope_x = matX[3,0]
+    slope_y = matX[4,0]
+    return math.atan( math.sqrt(slope_x**2 + slope_y**2) )
 
 
 def get_flattened_moving_window(dem, i, j):
@@ -57,11 +107,30 @@ def main():
 
     # initializing the slope matrix with np array of zeroes
     nRows, nCols = dem.shape
-    slope_data_sets = [ np.zeros((nRows-2, nCols-2)) for i in range(4) ]
+    slope_data_sets = [ np.zeros((nRows-2, nCols-2)) for i in range(8) ]
 
     #  names and the methods of algorithms ordered in the same way for setting slope_data_set and saving files later
-    algorithmNames = [ "SimpleD", "AvgNeighbourhood", "MaximumMax", "2FD" ]
-    get_slope_methods = [ get_slope_SimpleD, get_slope_AvgNeighbourhood, get_slope_MaximumMax, get_slope_2FD ]
+    algorithmNames = [
+        "SimpleD", 
+        "AvgNeighbourhood", 
+        "MaximumMax", 
+        "2FD", 
+        "3FDWRD", 
+        "3FD", 
+        "FFD", 
+        "ConstrainedQuadSurface"
+    ]
+    
+    get_slope_methods = [ 
+        get_slope_SimpleD, 
+        get_slope_AvgNeighbourhood, 
+        get_slope_MaximumMax, 
+        get_slope_2FD, 
+        get_slope_3FDWRD, 
+        get_slope_3FD, 
+        get_slope_FFD, 
+        get_slope_ConstrainedQuadSurface 
+    ]
     
     # calculating slope in the predefined order
     for i, get_slope in enumerate( get_slope_methods ):
