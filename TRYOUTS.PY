@@ -1,6 +1,8 @@
 import math
 import numpy as np 
 
+SQRT_OF_2 = math.sqrt(2)
+
 
 # file suffix according to algrithms
 def get_slope_MaximumMax(z, cell_size):
@@ -11,6 +13,23 @@ def get_slope_MaximumMax(z, cell_size):
     indices = [0, 2, 6, 8]
     slopes += [abs(z[4] - z[i]) / float(cell_size * math.sqrt(2)) for i in indices]
     return math.atan(max(slopes))
+
+
+def get_slope_3FDWRD( z,cell_size ):
+    slope_x = (z[2] - z[0] + SQRT_OF_2 * (z[5] - z[3]) + z[8] - z[6]) / float( ( 4 + 2*SQRT_OF_2 )*cell_size )
+    slope_y = (z[6] - z[0] + SQRT_OF_2 * (z[7] - z[1]) + z[8] - z[2]) / float( ( 4 + 2*SQRT_OF_2 )*cell_size )
+    return math.atan(math.sqrt(slope_x**2 + slope_y**2))
+
+def get_slope_3FD( z,cell_size ):
+    slope_x = (z[2] - z[0] + z[5] - z[3] + z[8] - z[6]) / float( 6*cell_size )
+    slope_y = (z[6] - z[0] + z[7] - z[1] + z[8] - z[2]) / float( 6*cell_size )
+    return math.atan(math.sqrt(slope_x**2 + slope_y**2))
+
+
+def get_slope_FFD( z,cell_size ):
+    slope_x = ( z[2] - z[0] + z[8] - z[6] ) / float( 4*cell_size )
+    slope_y = ( z[6] - z[0] + z[8] - z[3] ) / float( 4*cell_size )
+    return math.atan(math.sqrt(slope_x**2 + slope_y**2))
 
 def get_slope_ConstrainedQuadSurface( z,cellsize ):
     # define Z just transpose of the normalZ
@@ -61,11 +80,16 @@ dem = np.array(
     (1,1,0,0)
     ])
 
-slope_MaximumMax = np.zeros(( 2, 2 ))
-set_slope_dataset_with( 4, 4, 1, dem, slope_MaximumMax, get_slope_MaximumMax )
+# slope dataset list
+slope_data_sets = [ np.zeros((2,2)) for i in range(5) ]
 
-slope_quadSurf = np.zeros(( 2, 2 ))
-set_slope_dataset_with( 4, 4, 1, dem, slope_quadSurf, get_slope_ConstrainedQuadSurface )
+algorithmNames = [ "MaximumMax", "3FDWRD", "3FD", "FFD", "ConstrainedQuadSurface" ]
+get_slope_methods = [ get_slope_MaximumMax, get_slope_3FDWRD, get_slope_3FD, get_slope_FFD, get_slope_ConstrainedQuadSurface ]
 
-print( slope_MaximumMax )
-print( slope_quadSurf )
+# calculating slope in the predefined order
+for i, get_slope in enumerate( get_slope_methods ):
+    set_slope_dataset_with( 4, 4, 1, dem, slope_data_sets[i], get_slope )
+
+for algorithm,slope_raster in zip( algorithmNames,slope_data_sets ):
+    print( algorithm )
+    print( slope_raster ) 
