@@ -93,7 +93,7 @@ def set_slope_dataset_with( nRows, nCols, cell_size, dem_dataset, slope_dataset,
         for j in range(nCols-2):
             # extracting the moving window values
             window_z = get_flattened_moving_window(dem_dataset, i+1, j+1)
-            slope_dataset[i, j] = math.degrees( getSlope(window_z, cell_size) ) # changed degrees alter if needed later
+            slope_dataset[i, j] = getSlope(window_z, cell_size) * 100  # change to degrees or radian if needed * currently in grade
 
 
 def main():
