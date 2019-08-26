@@ -106,31 +106,31 @@ def main():
     cell_size = dem.meta["transform"][0] # the first index of transform is cell_size x and 4th index is cell_size y
     print("File opened!")
 
-    # initializing the slope matrix with np array of zeroes
+    # initializing the slope matrix with np array of -1
     nRows, nCols = dem.shape
     slope_data_sets = [ np.zeros((nRows, nCols))-1 for i in range(8) ]
 
     #  names and the methods of algorithms ordered in the same way for setting slope_data_set and saving files later
     algorithmNames = [
-        "SimpleD", 
-        "AvgNeighbourhood", 
-        "MaximumMax", 
-        "2FD", 
-        "3FDWRD", 
-        "3FD", 
-        "FFD", 
+        "SimpleD",
+        "AvgNeighbourhood",
+        "MaximumMax",
+        "2FD",
+        "3FDWRD",
+        "3FD",
+        "FFD",
         "ConstrainedQuadSurface"
     ]
     
-    get_slope_methods = [ 
-        get_slope_SimpleD, 
-        get_slope_AvgNeighbourhood, 
-        get_slope_MaximumMax, 
-        get_slope_2FD, 
-        get_slope_3FDWRD, 
-        get_slope_3FD, 
-        get_slope_FFD, 
-        get_slope_ConstrainedQuadSurface 
+    get_slope_methods = [
+        get_slope_SimpleD,
+        get_slope_AvgNeighbourhood,
+        get_slope_MaximumMax,
+        get_slope_2FD,
+        get_slope_3FDWRD,
+        get_slope_3FD,
+        get_slope_FFD,
+        get_slope_ConstrainedQuadSurface
     ]
     
     # calculating slope in the predefined order
@@ -138,22 +138,9 @@ def main():
         set_slope_dataset_with( nRows, nCols, cell_size, dem_data_set, slope_data_sets[i], get_slope )
         print( "slope calculation done for", algorithmNames[i] )
 
-    # extracting metadata as kwargs and updating it
+    # extracting metadata as kwargs and updating the driver
     kwargs = dem.meta.copy()
-    # getting the bounds
-    left, bottom, right, top = dem.bounds
-    transform = rasterio.transform.from_bounds(
-        left + cell_size,
-        bottom + cell_size,
-        right - cell_size,
-        top - cell_size,
-        nCols - 2,
-        nRows - 2)
-
     kwargs.update(
-        transform=transform,
-        height=nRows-2,
-        width=nCols-2,
         driver='GTiff'
     )
     
