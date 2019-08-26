@@ -49,7 +49,7 @@ def get_slope_3FD( z,cell_size ):
 
 def get_slope_FFD( z,cell_size ):
     slope_x = ( z[2] - z[0] + z[8] - z[6] ) / float( 4*cell_size )
-    slope_y = ( z[6] - z[0] + z[8] - z[3] ) / float( 4*cell_size )
+    slope_y = ( z[6] - z[0] + z[8] - z[2] ) / float( 4*cell_size )
     return math.atan(math.sqrt(slope_x**2 + slope_y**2))
 
 
