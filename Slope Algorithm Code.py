@@ -93,7 +93,8 @@ def set_slope_dataset_with( nRows, nCols, cell_size, dem_dataset, slope_dataset,
         for j in range(nCols-2):
             # extracting the moving window values
             window_z = get_flattened_moving_window(dem_dataset, i+1, j+1)
-            slope_dataset[i, j] = math.atan( getSlope(window_z, cell_size) ) * 100  # change to degrees or radian if needed * currently in grade
+            if all( [ z > 0 for z in window_z ] ): # ! to check no data vals which is -10000
+                slope_dataset[i, j] = math.atan( getSlope(window_z, cell_size) ) * 100  # change to degrees or radian if needed # * currently in grade
 
 
 def main():
@@ -107,7 +108,7 @@ def main():
 
     # initializing the slope matrix with np array of zeroes
     nRows, nCols = dem.shape
-    slope_data_sets = [ np.zeros((nRows-2, nCols-2)) for i in range(8) ]
+    slope_data_sets = [ np.zeros((nRows, nCols))-1 for i in range(8) ]
 
     #  names and the methods of algorithms ordered in the same way for setting slope_data_set and saving files later
     algorithmNames = [
@@ -162,9 +163,12 @@ def main():
     flattened_slope_datasets = [ slope_array.flatten() for slope_array in slope_data_sets ] # note this still maintins the index of slope_datasets and the algo_names
     
     with open( f"Outputs/{output_filename_prefix}_csv_formatted.csv","w" ) as out_csv_file:
-        for data,algo_name in zip(flattened_slope_datasets, algorithmNames):
-            for slope in data:
-                out_csv_file.write( f"{slope},{algo_name}\n" )
+        out_csv_file.write( f"{ ','.join( algorithmNames ) }\n")
+        for iSlope in range( len( flattened_slope_datasets[0] ) ):
+            if flattened_slope_datasets[0][iSlope] != -1: # Checking for no data value in the slope
+                for iAlgorithm in range( len( algorithmNames ) ):
+                    out_csv_file.write( f"{ flattened_slope_datasets[ iAlgorithm ][ iSlope ] }," )
+                out_csv_file.write("\n")
 
     # writing to all files with corresponding algorithm name in order
     for i, name in enumerate( algorithmNames ):

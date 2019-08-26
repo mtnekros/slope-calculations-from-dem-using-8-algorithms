@@ -86,10 +86,12 @@ slope_data_sets = [ np.zeros((2,2)) for i in range(5) ]
 algorithmNames = [ "MaximumMax", "3FDWRD", "3FD", "FFD", "ConstrainedQuadSurface" ]
 get_slope_methods = [ get_slope_MaximumMax, get_slope_3FDWRD, get_slope_3FD, get_slope_FFD, get_slope_ConstrainedQuadSurface ]
 
-# calculating slope in the predefined order
-for i, get_slope in enumerate( get_slope_methods ):
-    set_slope_dataset_with( 4, 4, 1, dem, slope_data_sets[i], get_slope )
+# # calculating slope in the predefined order
+# for i, get_slope in enumerate( get_slope_methods ):
+#     set_slope_dataset_with( 4, 4, 1, dem, slope_data_sets[i], get_slope )
 
-for algorithm,slope_raster in zip( algorithmNames,slope_data_sets ):
-    print( algorithm )
-    print( slope_raster ) 
+# for algorithm,slope_raster in zip( algorithmNames,slope_data_sets ):
+#     print( algorithm )
+#     print( slope_raster ) 
+
+print( ",".join(algorithmNames) )
