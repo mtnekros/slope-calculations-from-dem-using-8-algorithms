@@ -94,7 +94,7 @@ def set_slope_dataset_with( nRows, nCols, cell_size, dem_dataset, slope_dataset,
             # extracting the moving window values
             window_z = get_flattened_moving_window(dem_dataset, i+1, j+1)
             if all( [ z > 0 for z in window_z ] ): # ! to check no data vals which is -10000
-                slope_dataset[i, j] = math.atan( getSlope(window_z, cell_size) ) * 100  # change to degrees or radian if needed # * currently in grade
+                slope_dataset[i+1, j+1] = math.tan( getSlope(window_z, cell_size) ) * 100  # change to degrees or radian if needed # * currently in grade
 
 
 def main():
@@ -148,14 +148,11 @@ def main():
     output_filename_prefix = input("Enter the output filename prefix: ")
     # arranging the np array for spss csv format and writing
     flattened_slope_datasets = [ slope_array.flatten() for slope_array in slope_data_sets ] # note this still maintins the index of slope_datasets and the algo_names
-    
     with open( f"Outputs/{output_filename_prefix}_csv_formatted.csv","w" ) as out_csv_file:
-        out_csv_file.write( f"{ ','.join( algorithmNames ) }\n")
-        for iSlope in range( len( flattened_slope_datasets[0] ) ):
-            if flattened_slope_datasets[0][iSlope] != -1: # Checking for no data value in the slope
-                for iAlgorithm in range( len( algorithmNames ) ):
-                    out_csv_file.write( f"{ flattened_slope_datasets[ iAlgorithm ][ iSlope ] }," )
-                out_csv_file.write("\n")
+        for data,algo_name in zip(flattened_slope_datasets, algorithmNames):
+            for slope in data:
+                if slope != -1: # Checking for no data value in the slope
+                    out_csv_file.write( f"{slope},{algo_name}\n" )
 
     # writing to all files with corresponding algorithm name in order
     for i, name in enumerate( algorithmNames ):
